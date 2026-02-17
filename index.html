@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title></title>TalkIt PRO - Cubic Factory</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(180deg,#58cc02,#2b7a00);
+color:white;
+text-align:center;
+}
+
+header{
+background:#1f5c00;
+padding:15px;
+font-size:24px;
+font-weight:bold;
+}
+
+.screen{
+display:none;
+padding:20px;
+}
+
+.active{
+display:block;
+}
+
+.monpi{
+font-size:90px;
+}
+
+button{
+background:#ffd900;
+border:none;
+padding:15px 25px;
+margin:8px;
+border-radius:12px;
+font-size:18px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#ffc800;
+}
+
+.stats{
+display:flex;
+justify-content:center;
+gap:20px;
+font-size:20px;
+margin:10px;
+}
+
+.card{
+background:white;
+color:black;
+padding:20px;
+border-radius:15px;
+max-width:400px;
+margin:15px auto;
+}
+
+.choice{
+background:#eee;
+margin:10px;
+padding:12px;
+border-radius:10px;
+cursor:pointer;
+}
+
+.choice:hover{
+background:#ddd;
+}
+
+.correct{
+background:#58cc02 !important;
+color:white;
+}
+
+.wrong{
+background:#ff4b4b !important;
+color:white;
+}
+
+.shopItem{
+background:white;
+color:black;
+padding:15px;
+margin:10px auto;
+border-radius:12px;
+max-width:300px;
+}
+
+.mapLevel{
+background:white;
+color:black;
+margin:10px auto;
+padding:10px;
+border-radius:10px;
+max-width:200px;
+}
+
+.locked{
+background:#999;
+}
+
+</style>
+</head>
+<body>
+
+<header>TalkIt PRO 🐵</header>
+
+<!-- MENU -->
+<div id="menu" class="screen active">
+
+<div class="monpi">🐵</div>
+<h2>Soy Monpi, tu maestro</h2>
+
+<div class="stats">
+<div>🍌 <span id="bananas"></span></div>
+<div>🍫 <span id="cacao"></span></div>
+<div>⭐ <span id="xp"></span></div>
+</div>
+
+<p>División: <span id="division"></span></p>
+
+<button onclick="goMap()">Mapa</button>
+<button onclick="goShop()">Tienda</button>
+<button onclick="daily()">Recompensa diaria</button>
+
+</div>
+
+<!-- MAP -->
+<div id="map" class="screen">
+
+<h2>Mapa de aprendizaje</h2>
+
+<div id="levels"></div>
+
+<button onclick="menu()">Volver</button>
+
+</div>
+
+<!-- LESSON -->
+<div id="lesson" class="screen">
+
+<div class="monpi">🐵</div>
+
+<h2 id="question"></h2>
+
+<div id="choices"></div>
+
+</div>
+
+<!-- SHOP -->
+<div id="shop" class="screen">
+
+<h2>Tienda</h2>
+
+<div class="shopItem">
+5 🍌 = 5 🍫
+<button onclick="buyBananas()">Comprar</button>
+</div>
+
+<div class="shopItem">
++50 XP = 10 🍫
+<button onclick="buyXP()">Comprar</button>
+</div>
+
+<button onclick="menu()">Volver</button>
+
+</div>
+
+<script>
+
+let saveData={
+bananas:5,
+cacao:10,
+xp:0,
+division:"Principiante",
+level:1
+}
+
+let questions=[
+
+{q:"Hello significa:", choices:["Hola","Adiós","Perro"], correct:0},
+{q:"Dog significa:", choices:["Gato","Perro","Casa"], correct:1},
+{q:"House significa:", choices:["Casa","Hola","Comer"], correct:0},
+{q:"Apple significa:", choices:["Mesa","Manzana","Puerta"], correct:1},
+{q:"Water significa:", choices:["Fuego","Agua","Tierra"], correct:1}
+
+]
+
+function save(){
+
+localStorage.setItem("talkitPRO",JSON.stringify(saveData))
+
+}
+
+function load(){
+
+let data=localStorage.getItem("talkitPRO")
+
+if(data){
+saveData=JSON.parse(data)
+}
+
+updateUI()
+createMap()
+
+}
+
+function updateUI(){
+
+bananas.innerText=saveData.bananas
+cacao.innerText=saveData.cacao
+xp.innerText=saveData.xp
+division.innerText=saveData.division
+
+}
+
+function show(screen){
+
+document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"))
+
+document.getElementById(screen).classList.add("active")
+
+}
+
+function menu(){
+show("menu")
+}
+
+function goMap(){
+show("map")
+}
+
+function goShop(){
+show("shop")
+}
+
+function createMap(){
+
+levels.innerHTML=""
+
+for(let i=1;i<=questions.length;i++){
+
+let div=document.createElement("div")
+
+div.className="mapLevel"
+
+if(i>saveData.level) div.classList.add("locked")
+
+div.innerText="Nivel "+i
+
+div.onclick=()=>{
+if(i<=saveData.level)
+startLesson(i-1)
+}
+
+levels.appendChild(div)
+
+}
+
+}
+
+let currentQuestion=0
+
+function startLesson(index){
+
+if(saveData.bananas<=0){
+
+alert("Sin bananitas 🍌")
+
+return
+
+}
+
+currentQuestion=index
+
+question.innerText=questions[index].q
+
+choices.innerHTML=""
+
+questions[index].choices.forEach((choice,i)=>{
+
+let btn=document.createElement("div")
+
+btn.className="choice"
+
+btn.innerText=choice
+
+btn.onclick=()=>answer(btn,i)
+
+choices.appendChild(btn)
+
+})
+
+show("lesson")
+
+}
+
+function answer(btn,index){
+
+let correct=questions[currentQuestion].correct
+
+document.querySelectorAll(".choice").forEach(c=>c.onclick=null)
+
+if(index==correct){
+
+btn.classList.add("correct")
+
+saveData.xp+=20
+
+saveData.cacao+=2
+
+if(saveData.level<questions.length)
+saveData.level++
+
+}else{
+
+btn.classList.add("wrong")
+
+saveData.bananas--
+
+}
+
+checkDivision()
+
+save()
+updateUI()
+
+setTimeout(menu,1000)
+
+}
+
+function checkDivision(){
+
+if(saveData.xp>=100)
+saveData.division="Intermedio"
+
+if(saveData.xp>=300)
+saveData.division="Avanzado"
+
+}
+
+function buyBananas(){
+
+if(saveData.cacao>=5){
+
+saveData.cacao-=5
+saveData.bananas+=5
+
+save()
+
+updateUI()
+
+}
+
+}
+
+function buyXP(){
+
+if(saveData.cacao>=10){
+
+saveData.cacao-=10
+saveData.xp+=50
+
+save()
+
+updateUI()
+
+}
+
+}
+
+function daily(){
+
+saveData.cacao+=5
+
+save()
+
+updateUI()
+
+alert("Ganaste 5 🍫")
+
+}
+
+load()
+
+</script>
+
+</body>
+</html>
